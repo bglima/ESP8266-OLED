@@ -6,6 +6,7 @@
 void cmdInit() {
     keyQueue = xQueueCreate(MAX_LINE_SIZE, sizeof(char));
     cmdQueue = xQueueCreate(5, sizeof(char)*MAX_LINE_SIZE);
+
     printf("[SYS] keyQueue and cmdQueue are ready to go!\n");
     printf("[SYS] Let's test a hardcoded 'firstCommand' on the cmdQueue...\n");
     char testCmd [81] = "firstCommand";
@@ -105,4 +106,16 @@ void keyReaderTask(void *pvParameters)
             xQueueSend(keyQueue, &ch, 300 / portTICK_PERIOD_MS);
         }
     }
+}
+
+/*
+ * Insert a new command in command descriptor
+ */
+bool cmdInsert(commandDescriptor_t newCmd)
+{
+    if (currentNumOfCommands >= MAX_NUM_OF_CMD)
+        return false;
+
+    invoker[currentNumOfCommands] = newCmd;
+    return true;
 }

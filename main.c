@@ -6,6 +6,7 @@
 #include "queue.h"
 #include "esp/uart.h"
 #include "command.h"
+#include "led_cmd.h"
 
 int user_init( void )
 {

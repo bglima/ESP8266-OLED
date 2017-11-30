@@ -6,7 +6,17 @@
 void cmdInit() {
     keyQueue = xQueueCreate(MAX_LINE_SIZE, sizeof(char));
     cmdQueue = xQueueCreate(5, sizeof(char)*MAX_LINE_SIZE);
-    printf("keyQueue and cmdQueue are ready to go!\n");
+    printf("[SYS] keyQueue and cmdQueue are ready to go!\n");
+    printf("[SYS] Let's test a hardcoded 'firstCommand' on the cmdQueue...\n");
+    char testCmd [81] = "firstCommand";
+    cmdRun( testCmd );
+}
+
+/*
+ * Run a command based on a string
+ */
+void cmdRun( char *cmd ) {
+    xQueueSend(cmdQueue, cmd, 300 / portTICK_PERIOD_MS);
 }
 
 /*
@@ -42,7 +52,7 @@ void cmdHandlerTask(void *pvParameters)
                 continue;
 
             /* Handle the execution. Firstly search for correct command... */
-            printf("Command arrived: %s\n", argv[0]);
+            printf("[SYS] Command arrived: %s\n", argv[0]);
         }
 
     }
@@ -87,12 +97,12 @@ void cmdReaderTask(void *pvParameters)
 void keyReaderTask(void *pvParameters)
 {
     char ch;
-    printf("\n\n\nRunning keyManagerTask. Type 'help<enter>' for, well, help\n");
+    printf("\n\n\n[SYS] Running keyManagerTask. Type 'help<enter>' for, well, help\n");
     printf("%% ");
     fflush(stdout); // stdout is line buffered
     while(1) {
         if ( read(0, (void*)&ch, 1) ) {
-            xQueueSend(keyQueue, &ch, 1000 / portTICK_PERIOD_MS);
+            xQueueSend(keyQueue, &ch, 300 / portTICK_PERIOD_MS);
         }
     }
 }

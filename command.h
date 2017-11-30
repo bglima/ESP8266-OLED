@@ -24,5 +24,5 @@ void keyReaderTask(void *pvParameters);
 
 /* Functions */
 void cmdInit();
-
+void cmdRun( char* cmd );
 #endif

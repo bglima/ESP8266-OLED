@@ -10,3 +10,4 @@ Bruno Gabriel Cavalcante Lima
 
 [Yet another I2C driver for the ESP8266](https://github.com/SuperHouse/esp-open-rtos/tree/master/extras/i2c)
 
+[Best tutorial ever (from the few i've encountered ^^) about FreeRTOS](http://www.socialledge.com/sjsu/index.php?title=FreeRTOS_Tutorial)

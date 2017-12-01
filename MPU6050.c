@@ -13,6 +13,7 @@ void mpuInit() {
             return;     /* If any of registers does not respond, cancel request */
     }
 
+    /* Read once and fill initial values */
     mpuReadValues();
 
     /* Init last values as current values at first */
@@ -20,6 +21,12 @@ void mpuInit() {
         lastAccel[i] = accel[i];
         lastGyro[i] = accel[i];
     }
+
+    /* Timming related definitions */
+    dt = 0.01;
+    packetQueue =  xQueueCreate(MAX_PACKET_SIZE, sizeof(mpuData_t));
+    xTaskCreate(handlePacketTask, "handlePacketTask", 1024, NULL, 3, NULL);
+    xTaskCreate(getPacketTask, "getPacketTask", 1024, NULL, 2, NULL);
 
     /* Set commands for MPU at invoker */
     commandDescriptor_t descriptorCheckMpu = {"check-mpu", &cmdCheckMpu, " $check-mpu     Print MPU status on the screen.\n"};
@@ -29,9 +36,10 @@ void mpuInit() {
 }
 
 
-
 /*
+ *
  * Internal command functions
+ *
  */
 
 /* Check MPU status. 0 = OK; 1 = SLEEPING; 2 = NOT_FOUND */
@@ -53,7 +61,10 @@ uint8_t mpuCheck()
     return 0;
 }
 
-/* Read data from MPU and fill mpuRawData buffer */
+/* Read data from MPU and fill mpuRawData buffer
+ *
+ * ==> DEPRECATED! NOW, DATA IS READ FROM TASKS <==
+ */
 bool mpuReadValues()
 {
     uint8_t buffer[14];
@@ -84,6 +95,12 @@ bool mpuReadValues()
           gyro[1] = mpuRawData.value.gyroY * gyroFactor;
           gyro[2] = mpuRawData.value.gyroZ * gyroFactor;
     return true;
+}
+
+/* Return last read temperature in Celsius */
+float mpuGetTemp()
+{
+    return temp;
 }
 
 
@@ -117,4 +134,52 @@ status_t cmdPrintMpu(uint32_t argc, char *argv[])
     printf("[SYS] Temp  (Celsius): %f \n", temp);
     printf("\n");
     return OK;
+}
+
+
+
+/*
+ *
+ * Main tasks rountines
+ *
+ */
+void getPacketTask(void *pvParameters)
+{
+    uint8_t buffer[14];
+    while(1) {
+        if ( i2c_slave_read(ADDR, ACCEL_XOUT_H, buffer, 14) ) {
+             xQueueSend(packetQueue, buffer, 300 / portTICK_PERIOD_MS);
+        }
+        vTaskDelay( dt * 1000 / portTICK_PERIOD_MS );
+    }
+
+}
+
+void handlePacketTask(void *pvParameters)
+{
+    uint8_t buffer[14];
+    while(1) {
+        if ( xQueueReceive( packetQueue, buffer, 100 / portTICK_PERIOD_MS) ) {
+
+            mpuRawData.value.accelX = (((int16_t)buffer[0]) << 8) | buffer[1];
+            mpuRawData.value.accelY = (((int16_t)buffer[2]) << 8) | buffer[3];
+            mpuRawData.value.accelZ = (((int16_t)buffer[4]) << 8) | buffer[5];
+            mpuRawData.value.temp = (((int16_t)buffer[6]) << 8) | buffer[7];
+            mpuRawData.value.gyroX = (((int16_t)buffer[8]) << 8) | buffer[9];
+            mpuRawData.value.gyroY = (((int16_t)buffer[10]) << 8) | buffer[11];
+            mpuRawData.value.gyroZ = (((int16_t)buffer[12]) << 8) | buffer[13];
+
+            float accelFactor = GRAVITY / ACCELEROMETER_SENSITIVITY;
+            float gyroFactor = 1 / GYROSCOPE_SENSITIVITY;
+            float tempFactor = 1 / TEMPERATURE_SENSIVITY;
+            accel[0] = mpuRawData.value.accelX * accelFactor;
+            accel[1] = mpuRawData.value.accelY * accelFactor;
+            accel[2] = mpuRawData.value.accelZ * accelFactor;
+            temp = mpuRawData.value.temp * tempFactor + 36.53;
+            gyro[0] = mpuRawData.value.gyroX * gyroFactor;
+            gyro[1] = mpuRawData.value.gyroY * gyroFactor;
+            gyro[2] = mpuRawData.value.gyroZ * gyroFactor;
+
+        }
+    }
 }

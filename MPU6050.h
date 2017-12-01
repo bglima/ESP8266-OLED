@@ -20,6 +20,7 @@
 #define ACCELEROMETER_SENSITIVITY 16384.0
 #define GYROSCOPE_SENSITIVITY 131.0
 #define TEMPERATURE_SENSIVITY 340.0
+#define MAX_PACKET_SIZE 10
 typedef union
 {
     uint8_t buffer[14];         // Accessing the whole buffer
@@ -51,12 +52,12 @@ static float gyro[3];
 static float lastAccel[3];
 static float lastGyro[3];
 static float temp;
+static float dt;
 
 /* Basic read functions */
 void mpuInit();             /* Wake MPU and setup GYRO and ACCEL */
 uint8_t mpuCheck();         /* Reads WHO_I_AM register from MPU and checks whether it is in SLEEP mode */
 bool mpuReadValues();       /* Reads dev data and fill mpu_data buffer. Returns success of operation */
-void mpuGetDataBuffer(uint8_t *buffer); /* Write data to an external buffer */
 bool mpuTapped(float thresh);/* Returns whether the accel was tilter or not */
 float mpuGetTemp();         /* Return the temperature from last reading */
 
@@ -69,5 +70,12 @@ float mpuGetDt();             /* Return dt */
  */
 status_t cmdCheckMpu(uint32_t argc, char *argv[]);
 status_t cmdPrintMpu(uint32_t argc, char *argv[]);
+
+/*
+ * Queues and Tasks
+ */
+static QueueHandle_t packetQueue;
+void getPacketTask(void *pvParameters);
+void handlePacketTask(void *pvParameters);
 
 #endif

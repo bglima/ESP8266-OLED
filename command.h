@@ -14,6 +14,10 @@
 #define MAX_ARGC 10
 #define MAX_NUM_OF_CMD 20
 
+#define SDA_PIN (0) // D3
+#define SCL_PIN (2) // D4
+#define I2C_BUS (0)
+
 /*
  *
  * Defining global types

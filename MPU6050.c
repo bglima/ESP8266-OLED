@@ -35,7 +35,7 @@ void mpuInit() {
     /* Tap definitions */
     tapEnabled = true;
     tickSinceTap = 0;
-    tapTreshold = 7.5;
+    tapTreshold = 10.0;
 
     /* Set commands for MPU at invoker */
     commandDescriptor_t descriptorCheckMpu = {"mpu-check", &cmdCheckMpu, " $mpu-check     Print MPU status on the screen.\n"};
@@ -294,7 +294,7 @@ void getTapTask(void *pvParameters)
               printf("[SYS] Was double-tapped!\n");
               tickSinceTap = 0;
            }
-           vTaskDelay( 100 / portTICK_PERIOD_MS ) ;
+           vTaskDelay( 150 / portTICK_PERIOD_MS ) ;
         }
     }
 }

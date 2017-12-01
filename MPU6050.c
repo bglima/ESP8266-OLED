@@ -28,7 +28,7 @@ void mpuInit() {
 
     packetQueue =  xQueueCreate(MAX_PACKET_SIZE, sizeof(mpuData_t));
     xTaskCreate(handlePacketTask, "handlePacketTask", 512, NULL, 2, NULL);
-    xTaskCreate(getPacketTask, "getPacketTask", 512, NULL, 2, NULL);
+    xTaskCreate(getPacketTask, "getPacketTask", 512, NULL, 3, NULL);
     xTaskCreate(printDataTask, "printDataTask", 512, NULL, 1, NULL);
     xTaskCreate(getTapTask, "getTapTask", 512, NULL, 2, NULL);
 
@@ -190,7 +190,7 @@ void getPacketTask(void *pvParameters)
     uint8_t buffer[14];
     while(1) {
         if ( i2c_slave_read(ADDR, ACCEL_XOUT_H, buffer, 14) ) {
-             xQueueSend(packetQueue, buffer, 300 / portTICK_PERIOD_MS);
+             xQueueSend(packetQueue, buffer, 100 / portTICK_PERIOD_MS);
         }
         vTaskDelay( dt * 1000 / portTICK_PERIOD_MS );
     }
@@ -230,13 +230,11 @@ void printDataTask(void *pvParameters)
 {
     while(1)
     {
-        if ( printFreq == 0 )
+        while ( printFreq == 0 )
             taskYIELD();
-        else
-        {
-           printData();
-            vTaskDelay( (1000 / printFreq) / portTICK_PERIOD_MS );
-        }
+
+        printData();
+        vTaskDelay( (1000 / printFreq) / portTICK_PERIOD_MS );
     }
 }
 
@@ -245,19 +243,13 @@ void getTapTask(void *pvParameters)
 {
     while( 1 )
     {
-        if( !tapEnabled )
+        while( !tapEnabled )
             taskYIELD();
-        else {
 
-            vTaskDelay( dt * 1000 / portTICK_PERIOD_MS ) ;
-
-            /* Check if  tapped! */
-            if ( tapped(11.0) )
-            {
-                    printf("\n[SYS] Was tapped!\n");
-                    vTaskDelay( MAX_TAP_LENGTH / portTICK_PERIOD_MS );
-            }
-        }
+        vTaskDelay( dt * 1000 / portTICK_PERIOD_MS ) ;
+        /* Check if  tapped! */
+        if ( tapped(11.0) )
+                printf("\n[SYS] Was tapped!\n");
     }
 }
 

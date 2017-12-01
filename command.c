@@ -116,7 +116,7 @@ void cmdReaderTask(void *pvParameters)
     while(1)
     {
         // Receive a key from keyQueue
-        if( xQueueReceive(keyQueue, &rx, 1000 / portTICK_PERIOD_MS) )
+        if( xQueueReceive(keyQueue, &rx, 50 / portTICK_PERIOD_MS) )
         {
             printf("%c", rx);
             fflush(stdout); // stdout is line buffered
@@ -126,7 +126,7 @@ void cmdReaderTask(void *pvParameters)
                 printf("\n");
 
                 // Send a command to cmd queue
-                xQueueSend(cmdQueue, cmd, 300 / portTICK_PERIOD_MS);
+                xQueueSend(cmdQueue, cmd, 50 / portTICK_PERIOD_MS);
 
                 printf("%% ");
                 fflush(stdout);
@@ -148,7 +148,7 @@ void keyReaderTask(void *pvParameters)
     fflush(stdout); /* stdout is line buffered */
     while(1) {
         if ( read(0, (void*)&ch, 1) ) {
-            xQueueSend(keyQueue, &ch, 300 / portTICK_PERIOD_MS);
+            xQueueSend(keyQueue, &ch, 50 / portTICK_PERIOD_MS);
         }
     }
 }

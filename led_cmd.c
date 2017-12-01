@@ -16,7 +16,6 @@ void ledInit()
     xTaskCreate(blinkLedTask, "blinkLedTask", 256, NULL, 1, NULL);
 }
 
-
 /*
 *
 * Imlmementation of commands declared .h headers
@@ -29,8 +28,8 @@ status_t cmdOn(uint32_t argc, char *argv[])
            uint8_t gpio_num = atoi(argv[i]);
            gpio_enable(gpio_num, GPIO_OUTPUT);
            gpio_write(gpio_num, true);
-           if ( blink_io == gpio_num )
-               blink_freq = 0;
+           if ( blinkGpio == gpio_num )
+               blinkFreq = 0;
            printf("[SYS] On %d\n", gpio_num);
            return OK;
        }
@@ -43,11 +42,11 @@ status_t cmdOn(uint32_t argc, char *argv[])
 status_t cmdBlink(uint32_t argc, char *argv[])
 {
    if (argc >= 3) {
-       blink_io = atoi(argv[1]);
-       blink_freq = atoi(argv[2]);
-       gpio_enable(blink_io, GPIO_OUTPUT);
-       gpio_toggle(blink_io);
-       printf("[SYS] Blinking gpio %d\n", blink_io);
+       blinkGpio = atoi(argv[1]);
+       blinkFreq = atoi(argv[2]);
+       gpio_enable(blinkGpio, GPIO_OUTPUT);
+       gpio_toggle(blinkGpio);
+       printf("[SYS] Blinking gpio %d\n", blinkGpio);
        return OK;
    } else {
        printf("[ERR] Miissing gpio numbero and/or frequency (Hz)\n");
@@ -62,8 +61,8 @@ status_t cmdOff(uint32_t argc, char *argv[])
            uint8_t gpio_num = atoi(argv[i]);
            gpio_enable(gpio_num, GPIO_OUTPUT);
            gpio_write(gpio_num, false);
-           if ( blink_io == gpio_num )
-               blink_freq = 0;
+           if ( blinkGpio == gpio_num )
+               blinkFreq = 0;
            printf("[SYS] Off %d\n", gpio_num);
            return OK;
        }
@@ -74,14 +73,14 @@ status_t cmdOff(uint32_t argc, char *argv[])
 }
 
 /*
- *
+ * Task responsible for blink the led. Instantiated at ledInit()
  */
 void blinkLedTask(void *pvParameters)
 {
     while( 1 ) {
-        if ( blink_freq > 0 ) {
-            gpio_toggle(blink_io);
-            vTaskDelay( (1000 / blink_freq) / portTICK_PERIOD_MS);
+        if ( blinkFreq > 0 ) {
+            gpio_toggle(blinkGpio);
+            vTaskDelay( (1000 / blinkFreq) / portTICK_PERIOD_MS);
          } else {
             vTaskDelay( 1000 / portTICK_PERIOD_MS);
         }

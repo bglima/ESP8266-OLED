@@ -83,17 +83,18 @@ void cmdHandlerTask(void *pvParameters)
             if ( cmdIndex == currentNumOfCommands )
                 printf("[ERR] Unknown command '%s'! Try running 'help'\n", argv[0]);
             else {
-                printf("[SYS] Command found! Running now...\n");
+                // printf("[SYS] Command found! Running now...\n");
                 cmdStatus = (*invoker[cmdIndex].receiver)(argc, argv);
             }
 
             /* Check command result */
-            if( cmdStatus == OK )
-                printf("[SYS] Command successful\n");
+            if( cmdStatus == OK ) {
+                // printf("[SYS] Command successful\n");
+            }
             else if ( cmdStatus == FAIL )
-                printf("[SYS] Command failed\n");
+                printf("[ERR] Command failed\n");
             else
-                printf("[SYS] Unknown command state\n");
+                printf("[ERR] Unknown command state\n");
         }
 
     }
@@ -140,7 +141,7 @@ void keyReaderTask(void *pvParameters)
     char ch;
     printf("\n\n\n[SYS] Running keyManagerTask. Type 'help<enter>' for, well, help\n");
     printf("%% ");
-    fflush(stdout); // stdout is line buffered
+    fflush(stdout); /* stdout is line buffered */
     while(1) {
         if ( read(0, (void*)&ch, 1) ) {
             xQueueSend(keyQueue, &ch, 300 / portTICK_PERIOD_MS);

@@ -71,16 +71,13 @@ bool cmdInsert( commandDescriptor_t newCmd );
  * Command prototypes
  *
  */
-//static status_t cmdOn(uint32_t argc, char *argv[]);
-//static status_t cmdOff(uint32_t argc, char *argv[]);
-//static status_t cmdBlink(uint32_t argc, char *argv[]);
 static status_t cmdSleep(uint32_t argc, char *argv[]);
 static status_t cmdHelp(uint32_t argc, char *argv[]);
 
 /*
  *  Attributes
  */
-uint8_t currentNumOfCommands = 0;
+static uint8_t currentNumOfCommands = 0;
 static commandDescriptor_t invoker[MAX_NUM_OF_CMD];
 
 //static commandDescriptor_t invoker[NUM_OF_CMD] = {

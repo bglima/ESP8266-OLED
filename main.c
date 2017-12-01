@@ -14,6 +14,7 @@ int user_init( void )
 
     cmdInit();
     cmdRun( (const char*) "HelloWorld!");
+    ledInit();
 
     xTaskCreate(keyReaderTask, (signed char*) "keyManagerTask", 1024, NULL, 1, NULL);
     xTaskCreate(cmdReaderTask, (signed char*) "cmdManagerTask", 1024, NULL, 2, NULL);

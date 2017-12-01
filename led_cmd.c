@@ -2,13 +2,19 @@
 
 void ledInit()
 {
-    cmdInsert( {"on",&cmdOn, "$on <gpio number> [ <gpio number>]+     Set gpio to 1\n"} );
+    commandDescriptor_t descriptorOn = {"on",&cmdOn, " $on <gpio number> [ <gpio number>]+     Set gpio to 1\n"};
+    commandDescriptor_t descriptorOff =  {"off", &cmdOff, " $off <gpio number> [ <gpio number>]+    Set gpio to 0\n"};
+    commandDescriptor_t descriptorBlink =  {"blink", &cmdBlink, " $blink <gpio number> <frequency>    Starts blining gpio\n"};
+
+    cmdInsert( descriptorOn );
+    cmdInsert( descriptorOff );
+    cmdInsert( descriptorBlink );
 }
 
 
 /*
 *
-* Imlmementation of possible commands declared .h headers
+* Imlmementation of commands declared .h headers
 *
 */
 status_t cmdOn(uint32_t argc, char *argv[])
@@ -29,14 +35,14 @@ status_t cmdOn(uint32_t argc, char *argv[])
    }
 }
 
-status_t cmdOff(uint32_t argc, char *argv[])
+status_t cmdBlink(uint32_t argc, char *argv[])
 {
    if (argc >= 3) {
        blink_io = atoi(argv[1]);
        blink_freq = atoi(argv[2]);
        gpio_enable(blink_io, GPIO_OUTPUT);
        gpio_toggle(blink_io);
-       printf("Blinking %d\n", blink_io);
+       printf("[SYS] Blinking gpio %d\n", blink_io);
        return OK;
    } else {
        printf("[ERR] Miissing gpio numbero and/or frequency (Hz)\n");
@@ -44,7 +50,7 @@ status_t cmdOff(uint32_t argc, char *argv[])
    }
 }
 
-status_t cmdBlink(uint32_t argc, char *argv[])
+status_t cmdOff(uint32_t argc, char *argv[])
 {
    if (argc >= 2) {
        for(int i=1; i<argc; i++) {
@@ -57,7 +63,7 @@ status_t cmdBlink(uint32_t argc, char *argv[])
            return OK;
        }
    } else {
-       printf("[SYS] Missing gpio number.\n");
+       printf("[ERR] Missing gpio number.\n");
        return FAIL;
    }
 }

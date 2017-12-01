@@ -1,16 +1,25 @@
 #include "command.h"
 
 /*
+ * Show all avaliable commands within invoker
+ */
+static status_t cmdHelp(uint32_t argc, char *argv[]) {
+    printf("[SYS] List of avaliable commands: \n");
+        for(int i = 0; i < currentNumOfCommands; ++i)
+            printf("%s", invoker[i].cmdHelp);
+        printf("\n\n");
+    return OK;
+}
+
+/*
  * Initialize keys and command queues, both used by command tasks.
  */
 void cmdInit() {
     keyQueue = xQueueCreate(MAX_LINE_SIZE, sizeof(char));
     cmdQueue = xQueueCreate(5, sizeof(char)*MAX_LINE_SIZE);
 
-    printf("[SYS] keyQueue and cmdQueue are ready to go!\n");
-    printf("[SYS] Let's test a hardcoded 'firstCommand' on the cmdQueue...\n");
-    char testCmd [81] = "firstCommand";
-    cmdRun( testCmd );
+    commandDescriptor_t descriptorHelp = {"help", &cmdHelp, " $help     Show all avaliable commands\n"};
+    cmdInsert(descriptorHelp);
 }
 
 /*
@@ -53,7 +62,26 @@ void cmdHandlerTask(void *pvParameters)
                 continue;
 
             /* Handle the execution. Firstly search for correct command... */
-            printf("[SYS] Command arrived: %s\n", argv[0]);
+            int cmdIndex;
+            status_t cmdStatus = FAIL;
+            for( cmdIndex = 0; cmdIndex < currentNumOfCommands; ++cmdIndex )
+                if ( strcmp(argv[0], invoker[cmdIndex].cmdString) == 0 ) break;
+
+            /* Check if command was found */
+            if ( cmdIndex == currentNumOfCommands )
+                printf("[ERR] Unknown command '%s'! Try running 'help'\n", argv[0]);
+            else {
+                printf("[SYS] Command found! Running now...\n");
+                cmdStatus = (*invoker[cmdIndex].receiver)(argc, argv);
+            }
+
+            /* Check command result */
+            if( cmdStatus == OK )
+                printf("[SYS] Command successful\n");
+            else if ( cmdStatus == FAIL )
+                printf("[SYS] Command failed\n");
+            else
+                printf("[SYS] Unknown command state\n");
         }
 
     }
@@ -116,6 +144,6 @@ bool cmdInsert(commandDescriptor_t newCmd)
     if (currentNumOfCommands >= MAX_NUM_OF_CMD)
         return false;
 
-    invoker[currentNumOfCommands] = newCmd;
+    invoker[currentNumOfCommands++] = newCmd;
     return true;
 }

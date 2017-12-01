@@ -25,10 +25,16 @@ void mpuInit() {
     /* Timming related definitions */
     dt = 0.01;
     printFreq = 0;
+
     packetQueue =  xQueueCreate(MAX_PACKET_SIZE, sizeof(mpuData_t));
-    xTaskCreate(handlePacketTask, "handlePacketTask", 1024, NULL, 2, NULL);
-    xTaskCreate(getPacketTask, "getPacketTask", 1024, NULL, 2, NULL);
-    xTaskCreate(printDataTask, "printDataTask", 1024, NULL, 1, NULL);
+    xTaskCreate(handlePacketTask, "handlePacketTask", 512, NULL, 2, NULL);
+    xTaskCreate(getPacketTask, "getPacketTask", 512, NULL, 2, NULL);
+    xTaskCreate(printDataTask, "printDataTask", 512, NULL, 1, NULL);
+    xTaskCreate(getTapTask, "getTapTask", 512, NULL, 2, NULL);
+
+    /* Tap definitions */
+    tapEnabled = true;
+    tickSinceTap = 0;
 
     /* Set commands for MPU at invoker */
     commandDescriptor_t descriptorCheckMpu = {"mpu-check", &cmdCheckMpu, " $mpu-check     Print MPU status on the screen.\n"};
@@ -109,6 +115,7 @@ float mpuGetTemp()
     return temp;
 }
 
+/* Self-explained */
 void printData()
 {
     printf("\n[SYS] --> Printing MPU5060 read values: <--\n");
@@ -117,6 +124,17 @@ void printData()
     printf("[SYS] Temp  (Celsius): %f \n", temp);
     printf("\n");
 }
+
+/* Returns true if accel was tilted */
+bool tapped(float thresh)
+{
+    float diffAccelZ = fabs(lastAccel[2] - accel[2]);
+
+    if (  diffAccelZ > thresh )
+        return true;
+    return false;
+}
+
 
 /*
  * User command functions
@@ -223,7 +241,25 @@ void printDataTask(void *pvParameters)
 }
 
 
+void getTapTask(void *pvParameters)
+{
+    while( 1 )
+    {
+        if( !tapEnabled )
+            taskYIELD();
+        else {
 
+            vTaskDelay( dt * 1000 / portTICK_PERIOD_MS ) ;
+
+            /* Check if  tapped! */
+            if ( tapped(11.0) )
+            {
+                    printf("\n[SYS] Was tapped!\n");
+                    vTaskDelay( MAX_TAP_LENGTH / portTICK_PERIOD_MS );
+            }
+        }
+    }
+}
 
 
 

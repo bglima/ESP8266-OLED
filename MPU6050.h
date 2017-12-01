@@ -22,6 +22,7 @@
 #define GYROSCOPE_SENSITIVITY 131.0
 #define TEMPERATURE_SENSIVITY 340.0
 #define MAX_PACKET_SIZE 10
+#define MAX_TAP_LENGTH 200
 typedef union
 {
     uint8_t buffer[14];         // Accessing the whole buffer
@@ -55,6 +56,8 @@ static float lastGyro[3];
 static float temp;
 static float dt;
 static int printFreq;
+static bool tapEnabled;
+static uint16_t tickSinceTap;
 
 /* Basic read functions */
 void mpuInit();             /* Wake MPU and setup GYRO and ACCEL */
@@ -63,10 +66,6 @@ bool mpuReadValues();       /* Reads dev data and fill mpu_data buffer. Returns 
 bool mpuTapped(float thresh);/* Returns whether the accel was tilter or not */
 float mpuGetTemp();         /* Return the temperature from last reading */
 void printData();           /* Print converted data on screen */
-
-/* Timming functions */
-bool mpuSetDt(float new_dt);  /* Min value 0.0001 and max value 1. Default is 0.01. */
-float mpuGetDt();             /* Return dt */
 
 /*
  * User related functions
@@ -83,5 +82,6 @@ static QueueHandle_t packetQueue;
 void getPacketTask(void *pvParameters);
 void handlePacketTask(void *pvParameters);
 void printDataTask(void *pvParameters);
+void getTapTask(void *pvParameters);
 
 #endif

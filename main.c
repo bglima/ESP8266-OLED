@@ -19,4 +19,6 @@ int user_init( void )
     i2c_init(SCL_PIN, SDA_PIN);
     mpuInit();
 
+    cmdRun("help");
+
 }

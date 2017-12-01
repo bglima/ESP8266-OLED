@@ -21,8 +21,8 @@
 #define ACCELEROMETER_SENSITIVITY 16384.0
 #define GYROSCOPE_SENSITIVITY 131.0
 #define TEMPERATURE_SENSIVITY 340.0
-#define MAX_PACKET_SIZE 10
-#define MAX_TAP_LENGTH 200
+#define MAX_PACKET_QUEUE_SIZE 10
+#define MAX_TAP_LENGTH 25
 typedef union
 {
     uint8_t buffer[14];         // Accessing the whole buffer
@@ -56,6 +56,9 @@ static float lastGyro[3];
 static float temp;
 static float dt;
 static int printFreq;
+
+/* Tap related attributes */
+float tapTreshold;
 static bool tapEnabled;
 static uint16_t tickSinceTap;
 
@@ -74,6 +77,8 @@ status_t cmdCheckMpu(uint32_t argc, char *argv[]);
 status_t cmdPrintMpu(uint32_t argc, char *argv[]);
 status_t cmdStreamMpu(uint32_t argc, char *argv[]);
 status_t cmdStreamCloseMpu(uint32_t argc, char *argv[]);
+status_t cmdSetTapMpu(uint32_t argc, char *argv[]);
+status_t cmdSetTapMpu(uint32_t argc, char *argv[]);
 
 /*
  * Queues and Tasks

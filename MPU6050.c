@@ -26,7 +26,7 @@ void mpuInit() {
     dt = 0.01;
     printFreq = 0;
 
-    packetQueue =  xQueueCreate(MAX_PACKET_SIZE, sizeof(mpuData_t));
+    packetQueue =  xQueueCreate(MAX_PACKET_QUEUE_SIZE, sizeof(mpuData_t));
     xTaskCreate(handlePacketTask, "handlePacketTask", 512, NULL, 2, NULL);
     xTaskCreate(getPacketTask, "getPacketTask", 512, NULL, 3, NULL);
     xTaskCreate(printDataTask, "printDataTask", 512, NULL, 1, NULL);
@@ -35,16 +35,19 @@ void mpuInit() {
     /* Tap definitions */
     tapEnabled = true;
     tickSinceTap = 0;
+    tapTreshold = 7.5;
 
     /* Set commands for MPU at invoker */
     commandDescriptor_t descriptorCheckMpu = {"mpu-check", &cmdCheckMpu, " $mpu-check     Print MPU status on the screen.\n"};
     commandDescriptor_t descriptorPrintMpu = {"mpu-print", &cmdPrintMpu, " $mpu-print     Print MPU last read data.\n"};
     commandDescriptor_t descriptorStreamMpu = {"mpu-stream", &cmdStreamMpu, " $mpu-stream <frequency>   Show <frequency> MPU data per second.\n"};
     commandDescriptor_t descriptorStreamCloseMpu = {"x", &cmdStreamCloseMpu, " $x   Close priting stream.\n"};
+    commandDescriptor_t descriptorSetTapMpu = {"mpu-set-tap", &cmdSetTapMpu, " $mpu-set-tap   Set threshold for tapping.\n"};
     cmdInsert(descriptorCheckMpu);
     cmdInsert(descriptorPrintMpu);
     cmdInsert(descriptorStreamMpu);
     cmdInsert(descriptorStreamCloseMpu);
+    cmdInsert(descriptorSetTapMpu);
 }
 
 
@@ -164,19 +167,42 @@ status_t cmdPrintMpu(uint32_t argc, char *argv[])
 
 status_t cmdStreamMpu(uint32_t argc, char *argv[])
 {
+    if(argc < 2) {
+        printf("[ERR] Missing printf frequency. Please choose between 0 and 5\n");
+        return FAIL;
+    }
+
     int newPrintFreq = atoi(argv[1]);
     if ( newPrintFreq < 0 || newPrintFreq > 5 ) {
         printf("[ERR] Please, choose a frequency between 0 and 5. \n");
         return FAIL;
     }
-
     printFreq = newPrintFreq;
+    printf("[SYS] New print frequency set to %i\n", printFreq);
     return OK;
 }
 
 status_t cmdStreamCloseMpu(uint32_t argc, char *argv[])
 {
     printFreq = 0;
+    printf("[SYS] Closed print stream\n");
+    return OK;
+}
+
+status_t cmdSetTapMpu(uint32_t argc, char *argv[])
+{
+    if(argc < 2) {
+        printf("[ERR] Missing tap threshold. Please choose between 0.0 and 15.0\n");
+        return FAIL;
+    }
+
+    float newTapThreshold = atof(argv[1]);
+    if ( newTapThreshold < 0 || newTapThreshold > 15 ) {
+        printf("[ERR] Please, choose a tap threshold between 0 and 15.0\n");
+        return FAIL;
+    }
+    tapTreshold = atof(argv[1]);
+    printf("[SYS] Tap threshold set to %.2f\n", tapTreshold);
     return OK;
 }
 
@@ -246,12 +272,34 @@ void getTapTask(void *pvParameters)
         while( !tapEnabled )
             taskYIELD();
 
-        vTaskDelay( dt * 1000 / portTICK_PERIOD_MS ) ;
+        vTaskDelay( (dt * 1000) / portTICK_PERIOD_MS ) ;
+
+        /* Check and update tickSinceTap */
+        if ( tickSinceTap > 0 )
+            --tickSinceTap;
+
+        if (tickSinceTap == 1) {        /* Finished waiting for second tap */
+            printf("[SYS] Was tapped!\n");
+            tickSinceTap = 0;
+            continue;
+        }
+
         /* Check if  tapped! */
-        if ( tapped(11.0) )
-                printf("\n[SYS] Was tapped!\n");
+        if ( tapped( tapTreshold ) ) {
+
+           /* If not waiting for second tap yet... */
+           if ( tickSinceTap == 0 )
+               tickSinceTap = MAX_TAP_LENGTH;   /* Start waiting... */
+           else {
+              printf("[SYS] Was double-tapped!\n");
+              tickSinceTap = 0;
+           }
+           vTaskDelay( 100 / portTICK_PERIOD_MS ) ;
+        }
     }
 }
+
+
 
 
 

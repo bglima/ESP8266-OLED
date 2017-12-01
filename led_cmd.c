@@ -1,5 +1,8 @@
 #include "led_cmd.h"
 
+/*
+ * Insert led related commands to invoker.
+ */
 void ledInit()
 {
     commandDescriptor_t descriptorOn = {"on",&cmdOn, " $on <gpio number> [ <gpio number>]+     Set gpio to 1\n"};
@@ -9,6 +12,8 @@ void ledInit()
     cmdInsert( descriptorOn );
     cmdInsert( descriptorOff );
     cmdInsert( descriptorBlink );
+
+    xTaskCreate(blinkLedTask, "blinkLedTask", 256, NULL, 1, NULL);
 }
 
 
@@ -66,4 +71,19 @@ status_t cmdOff(uint32_t argc, char *argv[])
        printf("[ERR] Missing gpio number.\n");
        return FAIL;
    }
+}
+
+/*
+ *
+ */
+void blinkLedTask(void *pvParameters)
+{
+    while( 1 ) {
+        if ( blink_freq > 0 ) {
+            gpio_toggle(blink_io);
+            vTaskDelay( (1000 / blink_freq) / portTICK_PERIOD_MS);
+         } else {
+            vTaskDelay( 1000 / portTICK_PERIOD_MS);
+        }
+    }
 }

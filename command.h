@@ -24,14 +24,6 @@ typedef enum {
     FAIL
 } status_t;
 
-//typedef enum {
-//    CMD_ON,
-//    CMD_OFF,
-//    CMD_BLINK,
-//    CMD_SLEEP,
-//    CMD_HELP
-//} __attribute__((__packed__)) command_t;
-
 typedef status_t (*function_t)(uint32_t argc, char *argv[]);
 
 typedef struct {
@@ -79,17 +71,6 @@ static status_t cmdHelp(uint32_t argc, char *argv[]);
  */
 static uint8_t currentNumOfCommands = 0;
 static commandDescriptor_t invoker[MAX_NUM_OF_CMD];
-
-//static commandDescriptor_t invoker[NUM_OF_CMD] = {
-//    {"on", &cmdOn, "  $on <gpio number> [ <gpio number>]+     Set gpio to 1\n"},
-//    {"off", &cmdOff, "  $off <gpio number> [ <gpio number>]+    Set gpio to 0\n"},
-//    {"blink", &cmdBlink, "  $blink <gpio number> <frequency>    Starts blining gpio\n"},
-//    {"sleep", &cmdSleep, "  $sleep     Take a nap for two seconds\n"},
-//    {"help", &cmdHelp, "  $help     Show all avaliable commands\n"}
-//};
-
-//static uint8_t blink_io = 2;    /* Internal led is GPIO = 2 */
-//static uint8_t blink_freq = 0;  /* Initialize with blink off */
 
 
 #endif

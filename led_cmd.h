@@ -17,6 +17,7 @@ static status_t cmdBlink(uint32_t argc, char *argv[]);
 
 static uint8_t blink_io = 2;    /* Internal led is GPIO = 2 */
 static uint8_t blink_freq = 0;  /* Initialize with blink off */
+void blinkLedTask(void *pvParameters);
 
 /*
  * Function prototypes

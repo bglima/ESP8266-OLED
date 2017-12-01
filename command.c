@@ -12,6 +12,16 @@ static status_t cmdHelp(uint32_t argc, char *argv[]) {
 }
 
 /*
+ * Sleep for 2 seconds without interfeering in other tasks
+ */
+status_t cmdSleep(uint32_t argc, char *argv[])
+{
+    printf("[SYS] I'll sleep 2 seconds. Let's test UART HW FIFO\n");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    return OK;
+}
+
+/*
  * Initialize keys and command queues, both used by command tasks.
  */
 void cmdInit() {
@@ -19,7 +29,9 @@ void cmdInit() {
     cmdQueue = xQueueCreate(5, sizeof(char)*MAX_LINE_SIZE);
 
     commandDescriptor_t descriptorHelp = {"help", &cmdHelp, " $help     Show all avaliable commands\n"};
+    commandDescriptor_t descriptorSleep = {"sleep", &cmdSleep, " $sleep     Take a nap for two seconds\n"};
     cmdInsert(descriptorHelp);
+    cmdInsert(descriptorSleep);
 }
 
 /*

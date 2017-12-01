@@ -5,16 +5,19 @@
  * Return true if sucessfuly configured
  */
 void mpuInit() {
-    int regs[] = {PWR_MGMT_1, GYRO_CONFIG, ACCEL_CONFIG};
+    uint8_t regs[3] = {PWR_MGMT_1, GYRO_CONFIG, ACCEL_CONFIG};
     for (int i=0;i<3;i++) {
-        uint8_t data[] = {regs[i], 0};  /* Set each config reg to zero */
-        bool success = i2c_slave_write(ADDR, data, sizeof(data));
-        if (!success)
+        uint8_t data = 0;  /* Set each config reg to zero */
+        int err = i2c_slave_write(I2C_BUS, ADDR, &(regs[i]), &data, sizeof(data));
+        if ( err )
             return;     /* If any of registers does not respond, cancel request */
     }
 
+    printf("[SYS] MPU config was set successfuly!\n");
+
     /* Read once and fill initial values */
     mpuReadValues();
+    printData();
 
     /* Init last values as current values at first */
     for(int i=0; i < 3; ++i) {
@@ -50,7 +53,6 @@ void mpuInit() {
     cmdInsert(descriptorSetTapMpu);
 }
 
-
 /*
  *
  * Internal command functions
@@ -63,12 +65,14 @@ uint8_t mpuCheck()
     uint8_t reg_data = -1;
 
     /* Read WHO_I_AM register */
-    i2c_slave_read(ADDR, WHO_I_AM, &reg_data, 1);
+    uint8_t regs[2] = {WHO_I_AM, PWR_MGMT_1};
+
+    int err = i2c_slave_read(I2C_BUS, ADDR, &regs[0], &reg_data, 1);
     if ( reg_data != 0x68 ) /* Wrong address or not found */
         return 2;
 
     /* Read PWR_MGMT_1 register */
-    i2c_slave_read(ADDR, PWR_MGMT_1, &reg_data, 1);
+    err = i2c_slave_read(I2C_BUS, ADDR, &regs[1], &reg_data, 1);
     if ( reg_data == 0x64 ) /* MPU found, but in SLEEP mode */
         return 1;
 
@@ -85,30 +89,32 @@ bool mpuReadValues()
     uint8_t buffer[14];
 
     if( mpuCheck() ) // If return 0, MPU is active
-              return false;
+        return false;
 
-          bool ok = i2c_slave_read(ADDR, ACCEL_XOUT_H, buffer, 14);
-          if( !ok )
-              return false;
+    uint8_t reg = ACCEL_XOUT_H;
 
-          mpuRawData.value.accelX = (((int16_t)buffer[0]) << 8) | buffer[1];
-          mpuRawData.value.accelY = (((int16_t)buffer[2]) << 8) | buffer[3];
-          mpuRawData.value.accelZ = (((int16_t)buffer[4]) << 8) | buffer[5];
-          mpuRawData.value.temp = (((int16_t)buffer[6]) << 8) | buffer[7];
-          mpuRawData.value.gyroX = (((int16_t)buffer[8]) << 8) | buffer[9];
-          mpuRawData.value.gyroY = (((int16_t)buffer[10]) << 8) | buffer[11];
-          mpuRawData.value.gyroZ = (((int16_t)buffer[12]) << 8) | buffer[13];
+    int err = i2c_slave_read(I2C_BUS, ADDR, &reg, buffer, 14);
+    if( err )
+        return false;
 
-          float accelFactor = GRAVITY / ACCELEROMETER_SENSITIVITY;
-          float gyroFactor = 1 / GYROSCOPE_SENSITIVITY;
-          float tempFactor = 1 / TEMPERATURE_SENSIVITY;
-          accel[0] = mpuRawData.value.accelX * accelFactor;
-          accel[1] = mpuRawData.value.accelY * accelFactor;
-          accel[2] = mpuRawData.value.accelZ * accelFactor;
-          temp = mpuRawData.value.temp * tempFactor + 36.53;
-          gyro[0] = mpuRawData.value.gyroX * gyroFactor;
-          gyro[1] = mpuRawData.value.gyroY * gyroFactor;
-          gyro[2] = mpuRawData.value.gyroZ * gyroFactor;
+    mpuRawData.value.accelX = (((int16_t)buffer[0]) << 8) | buffer[1];
+    mpuRawData.value.accelY = (((int16_t)buffer[2]) << 8) | buffer[3];
+    mpuRawData.value.accelZ = (((int16_t)buffer[4]) << 8) | buffer[5];
+    mpuRawData.value.temp = (((int16_t)buffer[6]) << 8) | buffer[7];
+    mpuRawData.value.gyroX = (((int16_t)buffer[8]) << 8) | buffer[9];
+    mpuRawData.value.gyroY = (((int16_t)buffer[10]) << 8) | buffer[11];
+    mpuRawData.value.gyroZ = (((int16_t)buffer[12]) << 8) | buffer[13];
+
+    float accelFactor = GRAVITY / ACCELEROMETER_SENSITIVITY;
+    float gyroFactor = 1 / GYROSCOPE_SENSITIVITY;
+    float tempFactor = 1 / TEMPERATURE_SENSIVITY;
+    accel[0] = mpuRawData.value.accelX * accelFactor;
+    accel[1] = mpuRawData.value.accelY * accelFactor;
+    accel[2] = mpuRawData.value.accelZ * accelFactor;
+    temp = mpuRawData.value.temp * tempFactor + 36.53;
+    gyro[0] = mpuRawData.value.gyroX * gyroFactor;
+    gyro[1] = mpuRawData.value.gyroY * gyroFactor;
+    gyro[2] = mpuRawData.value.gyroZ * gyroFactor;
     return true;
 }
 
@@ -214,8 +220,9 @@ status_t cmdSetTapMpu(uint32_t argc, char *argv[])
 void getPacketTask(void *pvParameters)
 {
     uint8_t buffer[14];
+    uint8_t reg = ACCEL_XOUT_H;
     while(1) {
-        if ( i2c_slave_read(ADDR, ACCEL_XOUT_H, buffer, 14) ) {
+        if ( i2c_slave_read(I2C_BUS, ADDR, &reg, buffer, 14) == 0 ) {    /* 0 means SUCCESS */
              xQueueSend(packetQueue, buffer, 100 / portTICK_PERIOD_MS);
         }
         vTaskDelay( dt * 1000 / portTICK_PERIOD_MS );

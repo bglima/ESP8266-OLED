@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 #include "stdio.h"
-#include "i2c.h"
+#include <i2c/i2c.h>
 #include "math.h"
 #include "command.h"
 #include "task.h"
@@ -23,6 +23,10 @@
 #define TEMPERATURE_SENSIVITY 340.0
 #define MAX_PACKET_QUEUE_SIZE 10
 #define MAX_TAP_LENGTH 25
+
+
+
+
 typedef union
 {
     uint8_t buffer[14];         // Accessing the whole buffer

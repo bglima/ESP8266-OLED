@@ -7,9 +7,10 @@
 #include "command.h"
 #include "led_cmd.h"
 #include "MPU6050.h"
-#include "ssd1306.h"
 #include "stdio.h"
-#include <i2c/i2c.h>
+#include "display.h"
+
+
 
 int user_init( void )
 {
@@ -18,8 +19,15 @@ int user_init( void )
     cmdInit();
     ledInit();
     i2c_init(I2C_BUS, SCL_PIN, SDA_PIN, I2C_FREQ_100K);
+
     mpuInit();
+    vTaskDelay(1 * SECOND);
 
 
-    cmdRun("mpu-check");
+    displayInit();
+
+    vTaskDelay(1 * SECOND);
+    cmdRun("help");
+
+    return 0;
 }

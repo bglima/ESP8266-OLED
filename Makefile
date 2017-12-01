@@ -1,5 +1,5 @@
 PROGRAM=main
-EXTRA_COMPONENTS = extras/i2c
+EXTRA_COMPONENTS = extras/ssd1306 extras/i2c
 
 # Adjust the Makefile for your own computer!
 # The format is: include PATH_TO_COMMON.MK

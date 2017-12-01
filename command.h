@@ -16,7 +16,7 @@
 
 #define SDA_PIN (0) // D3
 #define SCL_PIN (2) // D4
-#define I2C_BUS (0)
+#define I2C_BUS (0) // BUS = 0
 
 /*
  *

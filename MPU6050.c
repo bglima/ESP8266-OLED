@@ -24,15 +24,21 @@ void mpuInit() {
 
     /* Timming related definitions */
     dt = 0.01;
+    printFreq = 0;
     packetQueue =  xQueueCreate(MAX_PACKET_SIZE, sizeof(mpuData_t));
-    xTaskCreate(handlePacketTask, "handlePacketTask", 1024, NULL, 3, NULL);
+    xTaskCreate(handlePacketTask, "handlePacketTask", 1024, NULL, 2, NULL);
     xTaskCreate(getPacketTask, "getPacketTask", 1024, NULL, 2, NULL);
+    xTaskCreate(printDataTask, "printDataTask", 1024, NULL, 1, NULL);
 
     /* Set commands for MPU at invoker */
-    commandDescriptor_t descriptorCheckMpu = {"check-mpu", &cmdCheckMpu, " $check-mpu     Print MPU status on the screen.\n"};
-    commandDescriptor_t descriptorPrintMpu = {"print-mpu", &cmdPrintMpu, " $print-mpu     Print MPU last read data.\n"};
+    commandDescriptor_t descriptorCheckMpu = {"mpu-check", &cmdCheckMpu, " $mpu-check     Print MPU status on the screen.\n"};
+    commandDescriptor_t descriptorPrintMpu = {"mpu-print", &cmdPrintMpu, " $mpu-print     Print MPU last read data.\n"};
+    commandDescriptor_t descriptorStreamMpu = {"mpu-stream", &cmdStreamMpu, " $mpu-stream <frequency>   Show <frequency> MPU data per second.\n"};
+    commandDescriptor_t descriptorStreamCloseMpu = {"x", &cmdStreamCloseMpu, " $x   Close priting stream.\n"};
     cmdInsert(descriptorCheckMpu);
     cmdInsert(descriptorPrintMpu);
+    cmdInsert(descriptorStreamMpu);
+    cmdInsert(descriptorStreamCloseMpu);
 }
 
 
@@ -103,6 +109,14 @@ float mpuGetTemp()
     return temp;
 }
 
+void printData()
+{
+    printf("\n[SYS] --> Printing MPU5060 read values: <--\n");
+    printf("[SYS] Accel (m/s^2) X: %.2f; Y:%.2f; Z:%.2f\n", accel[0], accel[1], accel[2]);
+    printf("[SYS] Gyro  (m/s^2) X: %.2f; Y:%.2f; Z:%.2f\n", gyro[0], gyro[1], gyro[2]);
+    printf("[SYS] Temp  (Celsius): %f \n", temp);
+    printf("\n");
+}
 
 /*
  * User command functions
@@ -124,19 +138,29 @@ status_t cmdCheckMpu(uint32_t argc, char *argv[])
    return OK;
 }
 
-
-
 status_t cmdPrintMpu(uint32_t argc, char *argv[])
 {
-    printf("\n[SYS] --> Printing MPU5060 read values: <--\n");
-    printf("[SYS] Accel (m/s^2) X: %.2f; Y:%.2f; Z:%.2f\n", accel[0], accel[1], accel[2]);
-    printf("[SYS] Gyro  (m/s^2) X: %.2f; Y:%.2f; Z:%.2f\n", gyro[0], gyro[1], gyro[2]);
-    printf("[SYS] Temp  (Celsius): %f \n", temp);
-    printf("\n");
+    printData();
     return OK;
 }
 
+status_t cmdStreamMpu(uint32_t argc, char *argv[])
+{
+    int newPrintFreq = atoi(argv[1]);
+    if ( newPrintFreq < 0 || newPrintFreq > 5 ) {
+        printf("[ERR] Please, choose a frequency between 0 and 5. \n");
+        return FAIL;
+    }
 
+    printFreq = newPrintFreq;
+    return OK;
+}
+
+status_t cmdStreamCloseMpu(uint32_t argc, char *argv[])
+{
+    printFreq = 0;
+    return OK;
+}
 
 /*
  *
@@ -183,3 +207,23 @@ void handlePacketTask(void *pvParameters)
         }
     }
 }
+
+void printDataTask(void *pvParameters)
+{
+    while(1)
+    {
+        if ( printFreq == 0 )
+            taskYIELD();
+        else
+        {
+           printData();
+            vTaskDelay( (1000 / printFreq) / portTICK_PERIOD_MS );
+        }
+    }
+}
+
+
+
+
+
+

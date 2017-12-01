@@ -12,7 +12,7 @@
 
 #define MAX_LINE_SIZE 81
 #define MAX_ARGC 10
-#define MAX_NUM_OF_CMD 10
+#define MAX_NUM_OF_CMD 20
 
 /*
  *

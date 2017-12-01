@@ -6,6 +6,7 @@
 #include "i2c.h"
 #include "math.h"
 #include "command.h"
+#include "task.h"
 
 /* General definitions */
 #define ADDR 0x68
@@ -53,6 +54,7 @@ static float lastAccel[3];
 static float lastGyro[3];
 static float temp;
 static float dt;
+static int printFreq;
 
 /* Basic read functions */
 void mpuInit();             /* Wake MPU and setup GYRO and ACCEL */
@@ -60,9 +62,10 @@ uint8_t mpuCheck();         /* Reads WHO_I_AM register from MPU and checks wheth
 bool mpuReadValues();       /* Reads dev data and fill mpu_data buffer. Returns success of operation */
 bool mpuTapped(float thresh);/* Returns whether the accel was tilter or not */
 float mpuGetTemp();         /* Return the temperature from last reading */
+void printData();           /* Print converted data on screen */
 
 /* Timming functions */
-bool mpuSetDt(float new_dt);  /* Min value 0.0001 and max value 1 */
+bool mpuSetDt(float new_dt);  /* Min value 0.0001 and max value 1. Default is 0.01. */
 float mpuGetDt();             /* Return dt */
 
 /*
@@ -70,6 +73,8 @@ float mpuGetDt();             /* Return dt */
  */
 status_t cmdCheckMpu(uint32_t argc, char *argv[]);
 status_t cmdPrintMpu(uint32_t argc, char *argv[]);
+status_t cmdStreamMpu(uint32_t argc, char *argv[]);
+status_t cmdStreamCloseMpu(uint32_t argc, char *argv[]);
 
 /*
  * Queues and Tasks
@@ -77,5 +82,6 @@ status_t cmdPrintMpu(uint32_t argc, char *argv[]);
 static QueueHandle_t packetQueue;
 void getPacketTask(void *pvParameters);
 void handlePacketTask(void *pvParameters);
+void printDataTask(void *pvParameters);
 
 #endif

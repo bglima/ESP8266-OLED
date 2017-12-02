@@ -29,16 +29,29 @@ static const ssd1306_t dev = {
     .height   = DISPLAY_HEIGHT
 };
 
+/* Attributes */
+static bool displayOn;
+static bool scrolling;
+static bool standByEnabled;
+static int timeToStandBy;
+
 /* Local frame buffer */
 static uint8_t buffer[DISPLAY_WIDTH * DISPLAY_HEIGHT / 8];
-static TimerHandle_t scrolTimeHandler = NULL; /* Timer handler */
+static TimerHandle_t standByTimeHandler = NULL; /* Timer handler */
 
 /* Tasks used */
 static void displayTask(void *pvParameters);
 
 /* Internal functions */
-void scrollingTimer(TimerHandle_t h);
+void standByTimer(TimerHandle_t h);
 void displayInit(void);
+void setDisplayState(bool state);
+void setScrollState(bool state, int timeSelection);
+void setStandByTime(int timeToStand);
 
+/* User commands */
+static status_t cmdSetAutoStandBy(uint32_t argc, char *argv[]);
+static status_t cmdSetDisplay(uint32_t argc, char *argv[]);
+static status_t cmdSetScroll(uint32_t argc, char *argv[]);
 
 #endif

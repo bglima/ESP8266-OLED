@@ -12,7 +12,7 @@
 #include <fonts/fonts.h>
 #include <command.h>
 #include "image.xbm"
-//#include "names.xbm"
+#include "names.xbm"
 
 /* Change this according to you schematics and display size */
 #define DISPLAY_WIDTH  128
@@ -38,7 +38,7 @@ static bool standByEnabled;
 static int timeToStandBy;
 
 /* Font attributes */
-static font_info_t *font = NULL; // current font 16, 17, 21
+static const font_info_t *font = NULL; // current font 16, 17, 21
 static font_face_t font_face = 0;
 
 /* Local frame buffer */
@@ -58,9 +58,9 @@ void displayInit(void);
 void setFontDemo(bool state);
 void setDisplayState(bool state);
 void setScrollState(bool state, int timeSelection);
-void setStandByTime(int timeToStand);
+void setStandByTime(int8_t timeToStand);
 void showStartMessage();
-void showLogoImage(unsigned char bits[]);
+void showLogoImage(uint8_t imageIndex);
 
 /* User commands */
 static status_t cmdSetAutoStandBy(uint32_t argc, char *argv[]);

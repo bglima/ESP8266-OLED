@@ -25,7 +25,7 @@ void displayInit(void)
         xTimerStart(standByTimeHandler, 0);
 
     showStartMessage();
-    showLogoImage(image_bits);
+    showLogoImage(1);
 
     /* Adding functions to invoker */
     commandDescriptor_t descriptorSetDisplay = {"display-turn", &cmdSetDisplay, " $display-turn <state>     State can be either 1 or 0\n"};
@@ -72,8 +72,20 @@ void showStartMessage()
     ssd1306_load_frame_buffer(&dev, buffer);
 }
 
-void showLogoImage(unsigned char bits[])
+void showLogoImage(uint8_t imageIndex)
 {
+    unsigned char * bits;
+    switch ( imageIndex ) {
+    case 0:
+        bits = image_bits;
+        break;
+    case 1:
+        bits = names_bits;
+        break;
+    default:
+        bits = image_bits;
+        break;
+    }
     ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
     ssd1306_load_xbm(&dev, bits, buffer);
 }
@@ -87,7 +99,7 @@ void setDisplayState(bool state)
 }
 
 
-void setStandByTime(int timeToStand)
+void setStandByTime(int8_t timeToStand)
 {
     if ( !timeToStand || timeToStand < 0) {
         standByEnabled = false;
@@ -186,5 +198,6 @@ status_t cmdSetFontDemo(uint32_t argc, char *argv[])
             printf("[SYS] Font demo set to ON\n");
         else
             printf("[SYS] Font demo set to OFF\n");
+        return OK;
     }
 }

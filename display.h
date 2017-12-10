@@ -50,10 +50,10 @@ static TimerHandle_t fontSelectTimeHanlder = NULL;
 static void displayTask(void *pvParameters);
 
 /* Internal timed functions */
-void standByTimer(TimerHandle_t h);
-void updateFont(TimerHandle_t h);
+static void standByTimer(TimerHandle_t h);
+static void updateFont(TimerHandle_t h);
 
-/* Internal called funtions */
+/* Public funtions */
 void displayInit(void);
 void setFontDemo(bool state);
 void setDisplayState(bool state);
@@ -61,6 +61,7 @@ void setScrollState(bool state, int timeSelection);
 void setStandByTime(int8_t timeToStand);
 void showStartMessage();
 void showLogoImage(uint8_t imageIndex);
+void showTemperature( float temp );
 
 /* User commands */
 static status_t cmdSetAutoStandBy(uint32_t argc, char *argv[]);

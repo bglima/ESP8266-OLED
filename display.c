@@ -25,7 +25,7 @@ void displayInit(void)
         xTimerStart(standByTimeHandler, 0);
 
     showStartMessage();
-    showLogoImage(1);
+    //showLogoImage(1);
 
     /* Adding functions to invoker */
     commandDescriptor_t descriptorSetDisplay = {"display-turn", &cmdSetDisplay, " $display-turn <state>     State can be either 1 or 0\n"};
@@ -60,17 +60,18 @@ void standByTimer(TimerHandle_t h)
 }
 
 /*************************************
- *           Internal functions
+ *           Public functions
  *************************************/
 void showStartMessage()
 {
     /* Load intro message */
     ssd1306_set_whole_display_lighting(&dev, false);
     ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[23], 0, 0, "Hi, dude!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[23], 0, 0, "Hi, dude! ", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     ssd1306_draw_string(&dev, buffer, font_builtin_fonts[10], 0, 32, "e-Bruno (c). Rights reserved.", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     ssd1306_load_frame_buffer(&dev, buffer);
 }
+
 
 void showLogoImage(uint8_t imageIndex)
 {
@@ -124,6 +125,7 @@ void setScrollState(bool state, int timeSel)
         }
     } else {
         ssd1306_stop_scroll(&dev);
+        ssd1306_load_frame_buffer(&dev, buffer);
         printf("[SYS] Scrolling stopped successfuly.\n");
     }
 }

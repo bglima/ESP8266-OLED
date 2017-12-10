@@ -9,7 +9,7 @@
 #include "task.h"
 
 /* General definitions */
-#define ADDR 0x68
+#define MPU_ADDR 0x68
 #define WHO_I_AM     0x75 // decimal 117
 #define PWR_MGMT_1   0x6B // decimal 107. SLEEP
 #define GYRO_CONFIG  0x1B // decimal 27

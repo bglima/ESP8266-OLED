@@ -10,8 +10,6 @@
 #include "stdio.h"
 #include "display.h"
 
-
-
 int user_init( void )
 {
     uart_set_baud(0, 115200);

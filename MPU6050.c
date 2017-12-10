@@ -8,7 +8,7 @@ void mpuInit() {
     uint8_t regs[3] = {PWR_MGMT_1, GYRO_CONFIG, ACCEL_CONFIG};
     for (int i=0;i<3;i++) {
         uint8_t data = 0;  /* Set each config reg to zero */
-        int err = i2c_slave_write(I2C_BUS, ADDR, &(regs[i]), &data, sizeof(data));
+        int err = i2c_slave_write(I2C_BUS, MPU_ADDR, &(regs[i]), &data, sizeof(data));
         if ( err )
             return;     /* If any of registers does not respond, cancel request */
     }
@@ -67,12 +67,12 @@ uint8_t mpuCheck()
     /* Read WHO_I_AM register */
     uint8_t regs[2] = {WHO_I_AM, PWR_MGMT_1};
 
-    int err = i2c_slave_read(I2C_BUS, ADDR, &regs[0], &reg_data, 1);
+    int err = i2c_slave_read(I2C_BUS, MPU_ADDR, &regs[0], &reg_data, 1);
     if ( reg_data != 0x68 ) /* Wrong address or not found */
         return 2;
 
     /* Read PWR_MGMT_1 register */
-    err = i2c_slave_read(I2C_BUS, ADDR, &regs[1], &reg_data, 1);
+    err = i2c_slave_read(I2C_BUS, MPU_ADDR, &regs[1], &reg_data, 1);
     if ( reg_data == 0x64 ) /* MPU found, but in SLEEP mode */
         return 1;
 
@@ -93,7 +93,7 @@ bool mpuReadValues()
 
     uint8_t reg = ACCEL_XOUT_H;
 
-    int err = i2c_slave_read(I2C_BUS, ADDR, &reg, buffer, 14);
+    int err = i2c_slave_read(I2C_BUS, MPU_ADDR, &reg, buffer, 14);
     if( err )
         return false;
 
@@ -222,7 +222,7 @@ void getPacketTask(void *pvParameters)
     uint8_t buffer[14];
     uint8_t reg = ACCEL_XOUT_H;
     while(1) {
-        if ( i2c_slave_read(I2C_BUS, ADDR, &reg, buffer, 14) == 0 ) {    /* 0 means SUCCESS */
+        if ( i2c_slave_read(I2C_BUS, MPU_ADDR, &reg, buffer, 14) == 0 ) {    /* 0 means SUCCESS */
              xQueueSend(packetQueue, buffer, 100 / portTICK_PERIOD_MS);
         }
         vTaskDelay( dt * 1000 / portTICK_PERIOD_MS );

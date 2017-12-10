@@ -10,6 +10,7 @@ void displayInit(void)
     ssd1306_init(&dev);
     ssd1306_set_whole_display_lighting(&dev, true);
     vTaskDelay(SECOND);
+    ssd1306_set_whole_display_lighting(&dev, false);
 
     /* Initial settings */
     standByEnabled = false;
@@ -18,7 +19,7 @@ void displayInit(void)
     timeToStandBy = 5;
 
     /* Creating timers */
-    fontSelectTimeHanlder = xTimerCreate("font_timer", 2 * SECOND, pdTRUE, NULL, updateFont);
+    fontSelectTimeHanlder = xTimerCreate("font_timer", 1 * SECOND, pdTRUE, NULL, updateFont);
     standByTimeHandler = xTimerCreate("fps_timer", timeToStandBy*SECOND, pdTRUE, NULL, standByTimer);
 
     if( standByEnabled )
@@ -64,11 +65,24 @@ void standByTimer(TimerHandle_t h)
  *************************************/
 void showStartMessage()
 {
-    /* Load intro message */
-    ssd1306_set_whole_display_lighting(&dev, false);
     ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[23], 0, 0, "Hi, dude! ", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[23], 0, 0, "Hi, dude!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     ssd1306_draw_string(&dev, buffer, font_builtin_fonts[10], 0, 32, "e-Bruno (c). Rights reserved.", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    ssd1306_load_frame_buffer(&dev, buffer);
+}
+
+void showTemperature(float temp)
+{
+    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
+    font = font_builtin_fonts[16];
+    uint16_t textWidth = font_measure_string(font, "Temp.");
+    ssd1306_draw_string(&dev, buffer, font, (DISPLAY_WIDTH - textWidth)/2, 1, "Temp.", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+
+    char text[20];
+    sprintf(text, "%.2f C", temp);
+    font = font_builtin_fonts[23];
+    textWidth = font_measure_string(font, text);
+    ssd1306_draw_string(&dev, buffer, font, (DISPLAY_WIDTH - textWidth)/2, 35, text, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     ssd1306_load_frame_buffer(&dev, buffer);
 }
 
@@ -135,6 +149,7 @@ void setFontDemo(bool state)
     if ( state ) {
        xTimerStart(fontSelectTimeHanlder, 0);
     } else {
+
         xTimerStop(fontSelectTimeHanlder, 0);
     }
 }

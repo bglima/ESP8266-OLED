@@ -38,12 +38,14 @@ static bool standByEnabled;
 static int timeToStandBy;
 
 /* Font attributes */
-static const font_info_t *font = NULL; // current font 16, 17, 21
+static const font_info_t *font = NULL;
 static font_face_t font_face = 0;
 
 /* Local frame buffer */
 static uint8_t buffer[DISPLAY_WIDTH * DISPLAY_HEIGHT / 8];
-static TimerHandle_t standByTimeHandler = NULL; /* Timer handler */
+
+/* Timer handlers */
+static TimerHandle_t standByTimeHandler = NULL;
 static TimerHandle_t fontSelectTimeHanlder = NULL;
 
 /* Tasks used */

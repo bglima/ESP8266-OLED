@@ -17,15 +17,13 @@ int user_init( void )
     cmdInit();
     ledInit();
     i2c_init(I2C_BUS, SCL_PIN, SDA_PIN, I2C_FREQ_100K);
-
     mpuInit();
     vTaskDelay(1 * SECOND);
 
-
     displayInit();
-
     vTaskDelay(1 * SECOND);
     cmdRun("help");
+    showTemperature(23.20);
 
     return 0;
 }

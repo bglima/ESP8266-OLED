@@ -17,69 +17,38 @@ void displayInit(void)
     displayOn = true;
     timeToStandBy = 5;
 
-    /* Scrolling timer */
+    /* Creating timers */
+    fontSelectTimeHanlder = xTimerCreate("font_timer", 2 * SECOND, pdTRUE, NULL, updateFont);
     standByTimeHandler = xTimerCreate("fps_timer", timeToStandBy*SECOND, pdTRUE, NULL, standByTimer);
+
     if( standByEnabled )
         xTimerStart(standByTimeHandler, 0);
 
-    for( int i = 0; i < font_builtin_fonts_count; ++i ) {
-        printf("Font %d\n", i);
-    }
-
-    font = font_builtin_fonts[0];
-    /* Load xbm images */
-    ssd1306_set_whole_display_lighting(&dev, false);
-    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&dev, buffer, font, 0, 0, "Hello, esp-open-rtos!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-//    ssd1306_load_frame_buffer(&dev, buffer);
-    ssd1306_draw_string(&dev, buffer, &font_builtin_fonts[0], 0, 45, "Btuno Lima", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-    ssd1306_load_frame_buffer(&dev, buffer);
-
-
-//    ssd1306_load_xbm(&dev, image_bits, buffer);
-    //uint8_t w = ssd1306_measure_string(0, "www.ba0sh1.com");
-    //ssd1306_draw_string(&dev, 0, (ssd1306_get_width(0) - w) / 2, 12, "www.ba0sh1.com", 0x01, 0x00);
-//    ssd1306_set_whole_display_lighting(&dev, true);
-//    ssd1306_set_whole_display_lighting(&dev, false);
-    
-    //ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT/2, OLED_COLOR_BLACK);
-//    ssd1306_draw_string(&dev, buffer, font, 0, 0, "Hello, esp-open-rtos!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-//    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[0], 2, 12, "Hello, esp-open-rtos!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-
-    fontSelectTimeHanlder = xTimerCreate("font_timer", 1 * SECOND, pdTRUE, NULL, updateFont);
-    xTimerStart(fontSelectTimeHanlder, 0);
+    showStartMessage();
+    showLogoImage(image_bits);
 
     /* Adding functions to invoker */
     commandDescriptor_t descriptorSetDisplay = {"display-turn", &cmdSetDisplay, " $display-turn <state>     State can be either 1 or 0\n"};
     commandDescriptor_t descriptorSetScroll = {"display-scroll", &cmdSetScroll, " $display-scroll <state> <time>     A state (0 or 1) and number from 0 to 7\n"};
     commandDescriptor_t descriptorStandBy = {"display-stand", &cmdSetAutoStandBy, " $display-stand <time>     State can be either 1 or 0\n"};
+    commandDescriptor_t descriptorFontDemo = {"display-demo", &cmdSetFontDemo, " $display-demo <state>    Shows avaliable fonts. State is 0 or 1\n"};
     cmdInsert(descriptorSetDisplay);
     cmdInsert(descriptorSetScroll);
     cmdInsert(descriptorStandBy);
+    cmdInsert(descriptorFontDemo);
 }
 
-
-
-//static void displayTask(void *pvParameters)
-//{
-
-//    bool fwd = true;
-//    while (1) {
-//        vTaskDelay(2*SECOND);   /* Flip direction each 2 seconds */
-//        //printf("[SYS] %s: still alive, flipping!\n", __FUNCTION__);
-//        ssd1306_set_scan_direction_fwd(&dev, fwd);
-//        //fwd = !fwd;
-//    }
-//}
-
+/************************************
+ *          Timed functions
+ ************************************/
 void updateFont(TimerHandle_t h) {
-        if (++font_face >= font_builtin_fonts_count)
-            font_face = 0;
-        font = font_builtin_fonts[font_face];
-
-    printf("Selected builtin font %d\n", font_face);
-    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT/2, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&dev, buffer, font, 0, 0, "Hello, esp-open-rtos!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    if (++font_face >= font_builtin_fonts_count)
+        font_face = 0;
+    font = font_builtin_fonts[font_face];
+    char text[20];
+    sprintf(text, "Font n %u ", font_face);
+    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
+    ssd1306_draw_string(&dev, buffer, font, 0, 0, text, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     ssd1306_load_frame_buffer(&dev, buffer);
 }
 
@@ -93,6 +62,22 @@ void standByTimer(TimerHandle_t h)
 /*************************************
  *           Internal functions
  *************************************/
+void showStartMessage()
+{
+    /* Load intro message */
+    ssd1306_set_whole_display_lighting(&dev, false);
+    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
+    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[23], 0, 0, "Hi, dude!", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    ssd1306_draw_string(&dev, buffer, font_builtin_fonts[10], 0, 32, "e-Bruno (c). Rights reserved.", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    ssd1306_load_frame_buffer(&dev, buffer);
+}
+
+void showLogoImage(unsigned char bits[])
+{
+    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
+    ssd1306_load_xbm(&dev, bits, buffer);
+}
+
 void setDisplayState(bool state)
 {
     displayOn = state;
@@ -131,7 +116,14 @@ void setScrollState(bool state, int timeSel)
     }
 }
 
-
+void setFontDemo(bool state)
+{
+    if ( state ) {
+       xTimerStart(fontSelectTimeHanlder, 0);
+    } else {
+        xTimerStop(fontSelectTimeHanlder, 0);
+    }
+}
 
 /****************************************
  *    User general purpose functions
@@ -179,5 +171,20 @@ status_t cmdSetAutoStandBy(uint32_t argc, char *argv[])
         setStandByTime( atoi(argv[1]) );
         printf("[SYS] Auto standBy mode set to %s\n", (displayOn)? "On" : "Off");
         return OK;
+    }
+}
+
+status_t cmdSetFontDemo(uint32_t argc, char *argv[])
+{
+    if( argc < 2 ) {
+        printf("[ERR] Missing font demo state (0 or 1) to set.\n");
+        return FAIL;
+    } else {
+        bool status = atoi(argv[1]);
+        setFontDemo( status );
+        if ( status )
+            printf("[SYS] Font demo set to ON\n");
+        else
+            printf("[SYS] Font demo set to OFF\n");
     }
 }

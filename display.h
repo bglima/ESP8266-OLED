@@ -38,7 +38,7 @@ static bool standByEnabled;
 static int timeToStandBy;
 
 /* Font attributes */
-static font_info_t *font = NULL; // current font 16, 17, 18
+static font_info_t *font = NULL; // current font 16, 17, 21
 static font_face_t font_face = 0;
 
 /* Local frame buffer */
@@ -49,18 +49,23 @@ static TimerHandle_t fontSelectTimeHanlder = NULL;
 /* Tasks used */
 static void displayTask(void *pvParameters);
 
-/* Internal functions */
+/* Internal timed functions */
 void standByTimer(TimerHandle_t h);
 void updateFont(TimerHandle_t h);
 
+/* Internal called funtions */
 void displayInit(void);
+void setFontDemo(bool state);
 void setDisplayState(bool state);
 void setScrollState(bool state, int timeSelection);
 void setStandByTime(int timeToStand);
+void showStartMessage();
+void showLogoImage(unsigned char bits[]);
 
 /* User commands */
 static status_t cmdSetAutoStandBy(uint32_t argc, char *argv[]);
 static status_t cmdSetDisplay(uint32_t argc, char *argv[]);
 static status_t cmdSetScroll(uint32_t argc, char *argv[]);
+static status_t cmdSetFontDemo(uint32_t argc, char *argv[]);
 
 #endif

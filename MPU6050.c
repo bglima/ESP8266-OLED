@@ -4,7 +4,7 @@
  * Init MPU5060 and configure ACCELL and GYRO data.
  * Return true if sucessfuly configured
  */
-void mpuInit() {
+void mpuInit(QueueHandle_t *newTapQueue) {
     uint8_t regs[3] = {PWR_MGMT_1, GYRO_CONFIG, ACCEL_CONFIG};
     for (int i=0;i<3;i++) {
         uint8_t data = 0;  /* Set each config reg to zero */
@@ -13,6 +13,8 @@ void mpuInit() {
             return;     /* If any of registers does not respond, cancel request */
     }
 
+    /* Set external queue pointer to tap */
+    internalTapQueue = newTapQueue;
     printf("[SYS] MPU config was set successfuly!\n");
 
     /* Read once and fill initial values */
@@ -271,7 +273,6 @@ void printDataTask(void *pvParameters)
     }
 }
 
-
 void getTapTask(void *pvParameters)
 {
     while( 1 )
@@ -280,6 +281,7 @@ void getTapTask(void *pvParameters)
             taskYIELD();
 
         vTaskDelay( (dt * 1000) / portTICK_PERIOD_MS ) ;
+        int tapCode;
 
         /* Check and update tickSinceTap */
         if ( tickSinceTap > 0 )
@@ -287,6 +289,8 @@ void getTapTask(void *pvParameters)
 
         if (tickSinceTap == 1) {        /* Finished waiting for second tap */
             printf("[SYS] Was tapped!\n");
+            tapCode = 0; /* Zero (0) means one single tap */
+            xQueueSend(*internalTapQueue, &tapCode, 50 / portTICK_PERIOD_MS);
             tickSinceTap = 0;
             continue;
         }
@@ -299,6 +303,8 @@ void getTapTask(void *pvParameters)
                tickSinceTap = MAX_TAP_LENGTH;   /* Start waiting... */
            else {
               printf("[SYS] Was double-tapped!\n");
+              tapCode = 1; /* One (1) means a double-tap */
+              xQueueSend(*internalTapQueue, &tapCode, 50 / portTICK_PERIOD_MS);
               tickSinceTap = 0;
            }
            vTaskDelay( 150 / portTICK_PERIOD_MS ) ;

@@ -65,9 +65,10 @@ static int printFreq;
 float tapTreshold;
 static bool tapEnabled;
 static uint16_t tickSinceTap;
+QueueHandle_t * internalTapQueue;
 
 /* Basic read functions */
-void mpuInit();             /* Wake MPU and setup GYRO and ACCEL */
+void mpuInit( QueueHandle_t * newTapQueue );             /* Wake MPU and setup GYRO and ACCEL */
 uint8_t mpuCheck();         /* Reads WHO_I_AM register from MPU and checks whether it is in SLEEP mode */
 bool mpuReadValues();       /* Reads dev data and fill mpu_data buffer. Returns success of operation */
 bool mpuTapped(float thresh);/* Returns whether the accel was tilter or not */

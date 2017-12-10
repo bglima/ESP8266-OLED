@@ -6,7 +6,7 @@
 static status_t cmdHelp(uint32_t argc, char *argv[]) {
     printf("[SYS] List of avaliable commands: \n");
         for(int i = 0; i < currentNumOfCommands; ++i)
-            printf("%s", invoker[i].cmdHelp);
+            printf("  %s", invoker[i].cmdHelp);
         printf("\n\n");
     return OK;
 }

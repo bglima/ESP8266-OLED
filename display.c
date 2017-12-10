@@ -13,10 +13,10 @@ void displayInit(void)
     ssd1306_set_whole_display_lighting(&dev, false);
 
     /* Initial settings */
-    standByEnabled = false;
+    standByEnabled = true;
     scrolling = true;
     displayOn = true;
-    timeToStandBy = 5;
+    timeToStandBy = 15;
 
     /* Creating timers */
     fontSelectTimeHanlder = xTimerCreate("font_timer", 1 * SECOND, pdTRUE, NULL, updateFont);
@@ -24,9 +24,10 @@ void displayInit(void)
 
     if( standByEnabled )
         xTimerStart(standByTimeHandler, 0);
+    if ( scrolling )
+        ssd1306_start_scroll_hori(&dev, false, 0, 7, FRAME_25);
 
     showStartMessage();
-    //showLogoImage(1);
 
     /* Adding functions to invoker */
     commandDescriptor_t descriptorSetDisplay = {"display-turn", &cmdSetDisplay, " $display-turn <state>     State can be either 1 or 0\n"};
@@ -63,6 +64,16 @@ void standByTimer(TimerHandle_t h)
 /*************************************
  *           Public functions
  *************************************/
+bool getDisplayStatus()
+{
+    return displayOn;
+}
+
+bool getScrollingStatus()
+{
+    return scrolling;
+}
+
 void showStartMessage()
 {
     ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
@@ -218,3 +229,4 @@ status_t cmdSetFontDemo(uint32_t argc, char *argv[])
         return OK;
     }
 }
+

@@ -42,7 +42,7 @@ void cmdInit() {
  * Run a command based on a string
  */
 void cmdRun( char *cmd ) {
-    xQueueSend(cmdQueue, cmd, 300 / portTICK_PERIOD_MS);
+    xQueueSend(cmdQueue, cmd, 50 / portTICK_PERIOD_MS);
 }
 
 /*
@@ -55,7 +55,7 @@ void cmdHandlerTask(void *pvParameters)
 
     while(1) {
         /* Receive a command from cmdQueue */
-        if( xQueueReceive(cmdQueue, &cmd[0], 1000 / portTICK_PERIOD_MS))
+        if( xQueueReceive(cmdQueue, &cmd[0], 50 / portTICK_PERIOD_MS))
         {
             char *argv[MAX_ARGC];
             int argc = 1;
@@ -99,6 +99,8 @@ void cmdHandlerTask(void *pvParameters)
                 printf("[ERR] Command failed\n");
             else
                 printf("[ERR] Unknown command state\n");
+        } else {
+            taskYIELD();
         }
 
     }
@@ -116,7 +118,7 @@ void cmdReaderTask(void *pvParameters)
     while(1)
     {
         // Receive a key from keyQueue
-        if( xQueueReceive(keyQueue, &rx, 50 / portTICK_PERIOD_MS) )
+        if( xQueueReceive(keyQueue, &rx, 100 / portTICK_PERIOD_MS) )
         {
             printf("%c", rx);
             fflush(stdout); // stdout is line buffered
@@ -133,6 +135,8 @@ void cmdReaderTask(void *pvParameters)
             } else {
                 if (i < sizeof(cmd)) cmd[i++] = rx;
             }
+        } else {
+            taskYIELD();
         }
     }
 }
@@ -148,7 +152,7 @@ void keyReaderTask(void *pvParameters)
     fflush(stdout); /* stdout is line buffered */
     while(1) {
         if ( read(0, (void*)&ch, 1) ) {
-            xQueueSend(keyQueue, &ch, 50 / portTICK_PERIOD_MS);
+            xQueueSend(keyQueue, &ch, 100 / portTICK_PERIOD_MS);
         }
     }
 }

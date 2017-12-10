@@ -290,7 +290,7 @@ void getTapTask(void *pvParameters)
         if (tickSinceTap == 1) {        /* Finished waiting for second tap */
             printf("[SYS] Was tapped!\n");
             tapCode = 0; /* Zero (0) means one single tap */
-            xQueueSend(*internalTapQueue, &tapCode, 50 / portTICK_PERIOD_MS);
+            xQueueSend(*internalTapQueue, &tapCode, 0 / portTICK_PERIOD_MS);
             tickSinceTap = 0;
             continue;
         }
@@ -304,7 +304,7 @@ void getTapTask(void *pvParameters)
            else {
               printf("[SYS] Was double-tapped!\n");
               tapCode = 1; /* One (1) means a double-tap */
-              xQueueSend(*internalTapQueue, &tapCode, 50 / portTICK_PERIOD_MS);
+              xQueueSend(*internalTapQueue, &tapCode, 0 / portTICK_PERIOD_MS);
               tickSinceTap = 0;
            }
            vTaskDelay( 150 / portTICK_PERIOD_MS ) ;

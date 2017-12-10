@@ -56,6 +56,8 @@ static void standByTimer(TimerHandle_t h);
 static void updateFont(TimerHandle_t h);
 
 /* Public funtions */
+bool getDisplayStatus();
+bool getScrollingStatus();
 void displayInit(void);
 void setFontDemo(bool state);
 void setDisplayState(bool state);

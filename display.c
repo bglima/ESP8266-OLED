@@ -14,7 +14,7 @@ void displayInit(void)
 
     /* Initial settings */
     standByEnabled = true;
-    scrolling = true;
+    scrolling = false;
     displayOn = true;
     timeToStandBy = 10;
 

@@ -16,7 +16,7 @@ void displayInit(void)
     standByEnabled = true;
     scrolling = true;
     displayOn = true;
-    timeToStandBy = 15;
+    timeToStandBy = 10;
 
     /* Creating timers */
     fontSelectTimeHanlder = xTimerCreate("font_timer", 1 * SECOND, pdTRUE, NULL, updateFont);

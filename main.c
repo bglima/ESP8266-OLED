@@ -65,20 +65,12 @@ void updateState(uint8_t code) {
         ++state;
         if ( state > 3 )
             state = 0;
-        return;
+        setDisplayState( true );
     }
 
-    /* Single tapped */
     switch( state ) {
-    case 0:                         /* Start message */
-        if ( getDisplayStatus() ) {
-            setScrollState( !getScrollingStatus(), 4);
-            setDisplayState( true );
-        } else {
-            showStartMessage();
-            setDisplayState( true );
-        }
-
+    case 0:
+        showStartMessage();
         break;
     case 1:
         showLogoImage(0);
@@ -95,6 +87,11 @@ void updateState(uint8_t code) {
 
 
 
+    /* Single tapped */
+    if ( getDisplayStatus() == true )
+        setScrollState( !getScrollingStatus(), 4 );
+
+    setDisplayState( true );
 }
 
 

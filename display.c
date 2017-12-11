@@ -26,6 +26,8 @@ void displayInit(void)
         xTimerStart(standByTimeHandler, 0);
     if ( scrolling )
         ssd1306_start_scroll_hori(&dev, false, 0, 7, FRAME_25);
+    else
+        ssd1306_stop_scroll(&dev);
 
     showStartMessage();
 

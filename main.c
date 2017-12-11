@@ -88,7 +88,7 @@ void updateState(uint8_t code) {
 
 
     /* Single tapped */
-    if ( getDisplayStatus() == true )
+    if ( getDisplayStatus() == true && !    code )
         setScrollState( !getScrollingStatus(), 4 );
 
     setDisplayState( true );
